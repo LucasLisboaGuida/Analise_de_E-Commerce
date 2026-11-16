@@ -1,0 +1,7 @@
+# Dados sintéticos gerados localmente
+data/generated/
+data/teste/
+
+# Arquivos auxiliares do Python
+__pycache__/
+*.pyc
