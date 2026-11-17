@@ -1,71 +1,59 @@
-# Dataset sintético do e-commerce
+# Geração e importação do dataset sintético
 
-O script `02_generate_data.py` gera **nove arquivos CSV** compatíveis com `Sql/01_create_tables.sql`. Não conecta nem modifica o banco de dados.
+Esta pasta reúne os dois scripts Python que tornam o estudo reproduzível.
 
-## Requisitos
+## Pré-requisitos
 
-Python 3.10 ou superior. Não precisa instalar bibliotecas adicionais.
+- Python 3.10 ou superior.
+- PostgreSQL com um banco chamado `ecommerce` e tabelas criadas a partir de [`Sql/01_create_tables.sql`](../Sql/01_create_tables.sql).
 
-## Execução
+Os exemplos abaixo são executados no **terminal da pasta raiz** do repositório.
 
-Abra o terminal do VS Code **na pasta principal do repositório** e execute:
+## 1. Gerar CSVs
 
 ```powershell
 py Python/02_generate_data.py
 ```
 
-Se `py` não funcionar, tente `python Python/02_generate_data.py`.
+O gerador usa apenas a biblioteca padrão do Python. Os nove arquivos ficam em `data/generated/` e cobrem `customers`, `addresses`, `categories`, `products`, `orders`, `order_items`, `payments`, `shipments` e `inventory`.
 
-Os arquivos aparecem em `data/generated/`: `customers.csv`, `addresses.csv`, `categories.csv`, `products.csv`, `orders.csv`, `order_items.csv`, `payments.csv`, `shipments.csv`, `inventory.csv`.
+O conjunto padrão tem 5.000 clientes, 500 produtos, 15 categorias, 20.000 pedidos, 43.941 itens, 21.330 pagamentos e 17.988 registros de envio, além de endereços e estoque.
 
-Para testar com menos dados:
+Para testar uma carga menor sem sobrescrever a saída padrão:
 
 ```powershell
 py Python/02_generate_data.py --customers 50 --products 30 --orders 100 --output data/teste
 ```
 
-## Dataset padrão
+A semente padrão é `--seed 42`, que possibilita reproduzir o mesmo dataset. Executar novamente na mesma pasta **sobrescreve os CSVs**. O gerador **não altera** o banco PostgreSQL.
 
-- 5.000 clientes, com um ou dois endereços;
-- 15 categorias e 500 produtos com estoque;
-- 20.000 pedidos, geralmente com 1 a 4 produtos distintos por pedido;
-- aproximadamente 44 mil itens, 21 mil pagamentos e 18 mil registros de entrega;
-- datas de vendas entre janeiro/2025 e outubro/2026, com sazonalidade simulada;
-- pedidos cancelados ou devolvidos, tentativas recusadas e clientes recorrentes.
+## 2. Importar para o PostgreSQL
 
-Todos os dados são fictícios; os e-mails usam `example.com`, e CEPs e telefones são marcadores de teste. Um pedido pode ter mais de uma tentativa de pagamento. **Não some todos os pagamentos para calcular faturamento**: existem recusas e reembolsos.
-
-A semente padrão (`--seed 42`) torna os dados reproduzíveis. Rodar novamente com a mesma configuração sobrescreve os CSVs. Os arquivos não são importados automaticamente para o PostgreSQL.
-
-## Próxima etapa
-
-Verificar os arquivos gerados e preparar a importação na ordem correta das chaves estrangeiras.
-
-
-## Importação dos CSVs para PostgreSQL
-
-Depois de gerar os CSVs, instale o driver PostgreSQL no mesmo Python do VS Code:
+Instale a dependência e execute o importador:
 
 ```powershell
 py -m pip install "psycopg[binary]"
-```
-
-No terminal, na pasta raiz do projeto:
-
-```powershell
 py Python/03_import_data.py
 ```
 
-O script conecta em `localhost:5432`, banco `ecommerce` e usuário `postgres` por padrão. Ele pede a senha do usuário PostgreSQL (a mesma usada na conexão do VS Code) sem exibi-la na tela. Se o usuário/porta forem diferentes, use `--user outro_usuario` ou `--port 5433`.
+Por padrão, o importador usa `localhost:5432`, banco `ecommerce`, usuário `postgres`. Também aceita `--user`, `--host`, `--port` e `--data-dir`.
 
-**Proteções:** exige que as nove tabelas estejam vazias, verifica os cabeçalhos dos nove arquivos, solicita a palavra `IMPORTAR` e usa uma transação única. Se algo falhar, a carga é revertida. A inserção segue as dependências entre as tabelas e ajusta as sequências `IDENTITY` para futuros cadastros.
+O programa:
 
-Confira no banco depois da importação:
+- Pede a senha do PostgreSQL (sem exibir) e uma confirmação digitada.
+- Verifica o nome do banco, os CSVs, seus cabeçalhos e se **todas as nove tabelas estão vazias**.
+- Importa os registros na ordem das dependências usando uma **transação única**.
+- Ajusta as sequências de IDs para futuras inserções.
+- Desfaz as inserções se a carga falhar antes de ser concluída.
 
-```sql
-SELECT COUNT(*) AS total_clientes FROM customers;
-SELECT COUNT(*) AS total_pedidos FROM orders;
-SELECT COUNT(*) AS total_itens FROM order_items;
-```
+**Não execute o importador numa base já preenchida:** ele interrompe a operação para evitar duplicações. Nunca publique senhas no GitHub.
 
-Resultados esperados para o dataset padrão: 5.000 clientes, 20.000 pedidos e 43.941 itens. **Não execute o importador novamente após a carga**, porque ele foi criado para uma base vazia. Não coloque senhas em arquivos versionados ou no GitHub.
+## 3. Validar
+
+Com a conexão aberta no banco `ecommerce`, rode [`Sql/02_data_quality_checks.sql`](../Sql/02_data_quality_checks.sql).
+
+## Observações de modelagem
+
+Os dados são **sintéticos**: e-mails usam `example.com`, enquanto os demais dados cadastrais são fictícios. Há sazonalidade, preços de faixas definidas, tentativas recusadas, estornos e pedidos de múltiplos itens.
+
+**Não some todos os pagamentos como receita:** `payments` guarda tentativas e resultados, inclusive recusas e reembolsos. A métrica exploratória de **valor vendido de produtos** usa os itens dos pedidos entregues, com descontos e sem frete.
