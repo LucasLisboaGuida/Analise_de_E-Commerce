@@ -1,119 +1,143 @@
-# Análise de E-Commerce | SQL, Python e Business Intelligence
+# Análise de E-Commerce | Projeto End-to-End de Dados
 
-Projeto de portfólio **end-to-end**: da modelagem de um banco de dados relacional à geração de dados sintéticos, carga no PostgreSQL, testes de qualidade, análises exploratórias e segmentação de clientes. O **dashboard em Power BI está em desenvolvimento**.
+**PostgreSQL · Python · SQL · Power BI · Git/GitHub**
 
-> **Aviso:** esta é uma empresa fictícia. Todos os clientes, endereços, produtos e pedidos foram gerados por código. Os resultados não representam o varejo brasileiro real.
+Projeto de portfólio que simula o ciclo completo de análise de dados de um e-commerce: **modelagem relacional, geração de dados, carga, qualidade, análise exploratória, segmentação RFM, modelagem dimensional e dashboards em Power BI Desktop**.
 
-## Visão geral
+> **Projeto fictício:** todos os clientes, pedidos, preços e resultados comerciais são sintéticos. Não representam empresas ou tendências reais do mercado brasileiro.
 
-| Indicador do dataset | Resultado |
+## Dashboard Power BI — 3 páginas
+
+O relatório interativo está disponível para abrir no Power BI Desktop: **[Ecommerce_Analytics.pbix](Bi/Ecommerce_Analytics.pbix)**.
+
+### 1. Resumo Executivo
+
+![Página Resumo Executivo do dashboard](Bi/screenshots/resumo_executivo.png)
+
+Vendas de produtos em pedidos entregues, evolução mensal, ticket médio, distribuição por categoria e por estado de entrega.
+
+### 2. Clientes e Segmentação RFM
+
+![Página Clientes e RFM do dashboard](Bi/screenshots/clientes_rfm.png)
+
+Quantidade de clientes, recorrência, distribuição de frequência, segmentos de recência/frequência/valor e participação de cada grupo no valor vendido.
+
+**A classificação RFM é um retrato histórico com data de referência fixa em 17/11/2026**; não é um modelo preditivo de abandono.
+
+### 3. Operações e Logística
+
+![Página Operações e Logística do dashboard](Bi/screenshots/operacoes_logistica.png)
+
+Status dos pedidos, taxas de cancelamento e de recusa de tentativas de pagamento, meios de pagamento, envios, prazo de transporte e situação do estoque.
+
+## Dataset e indicadores principais
+
+| Indicador | Resultado |
 | --- | ---: |
 | Clientes cadastrados | **5.000** |
-| Produtos | **500** |
-| Categorias | **15** |
-| Pedidos | **20.000** |
-| Itens de pedidos | **43.941** |
-| Registros nas 9 tabelas | **114.821** |
-| Verificações de qualidade selecionadas | **8/8 sem inconsistências** |
+| Produtos e categorias | **500 produtos / 15 categorias** |
+| Pedidos totais | **20.000** |
+| Pedidos entregues | **13.190** |
+| Itens de pedido | **43.941** |
+| Registros nas 9 tabelas operacionais | **114.821** |
+| Valor vendido dos produtos de pedidos entregues | **R$ 54.238.147,33** |
+| Ticket médio desses pedidos | **R$ 4.112,07** |
+| Clientes recorrentes (2 ou mais pedidos entregues) | **3.164 de 4.049 compradores (78,14%)** |
+| Clientes classificados como "Em risco" pelo RFM | **670** |
+| Produtos com estoque baixo | **39** |
+| Unidades em estoque | **54.250** |
+| Validações iniciais de qualidade | **8 regras sem inconsistências encontradas** |
 
-**Período simulado de pedidos:** janeiro de 2025 a outubro de 2026.
+**Período sintético dos pedidos:** janeiro de 2025 a outubro de 2026.
 
-**Ferramentas:** PostgreSQL, SQL, Python 3.10+, Git/GitHub e VS Code. **Power BI Desktop:** próxima fase.
+**Definição de valor vendido:** soma do valor dos produtos nos pedidos com status \`delivered\`, usando preços históricos após descontos, **sem frete**. Não equivale ao faturamento contábil nem aos recebimentos de caixa. A taxa de recusa de pagamentos é calculada por **tentativas**, não por pedidos.
 
-## Objetivos
+## Descobertas da análise exploratória
 
-- Desenhar um **modelo operacional relacional** com chaves primárias, estrangeiras e regras de integridade.
-- Construir um processo **reproduzível** de geração e importação de dados, sem depender de arquivos privados.
-- Avaliar qualidade e consistência antes de utilizar os dados.
-- Explorar desempenho comercial, distribuição geográfica, recorrência, valor por cliente e **segmentação RFM**.
-- Evoluir o projeto para **modelo dimensional e dashboard em Power BI**.
+- **Sazonalidade:** novembro de 2025 teve o maior valor vendido daquele ano (cerca de R$ 4,48 milhões), refletindo a sazonalidade simulada no gerador.
+- **Categorias:** Informática, Celulares e TVs lideraram em valor vendido.
+- **Geografia:** São Paulo apresentou o maior valor vendido (aproximadamente R$ 12,67 milhões). A distribuição geográfica foi definida no dataset sintético.
+- **Clientes:** os 1.610 clientes com quatro ou mais pedidos entregues concentraram **64,48%** do valor histórico vendido de produtos.
+- **RFM:** os 670 clientes do segmento *Em risco* representam **27,07%** do valor histórico vendido, mas isso é uma classificação por regras e **não comprova risco real de evasão**.
 
-## Modelo de dados
+[Metodologia e resultados detalhados](docs/analise_exploratoria.md) · [Estudo de caso exploratório opcional](docs/estudo_de_caso_clientes.md)
 
-![Diagrama entidade-relacionamento do e-commerce](Diagram/diagrams_01_operational_model.png)
+## Arquitetura da solução
 
-O modelo operacional possui 9 tabelas: `customers`, `addresses`, `categories`, `products`, `orders`, `order_items`, `payments`, `shipments` e `inventory`. O pedido preserva um retrato do endereço de entrega e os itens mantêm o preço praticado no momento da compra.
+**Pipeline:** modelagem SQL → geração sintética em Python → arquivos CSV locais → PostgreSQL → checagens de integridade → views analíticas no schema \`bi\` → Power BI Desktop.
 
-## Principais achados da exploração inicial
+![Modelo operacional relacional](Diagram/diagrams_01_operational_model.png)
 
-Os resultados abaixo usam **pedidos com status `delivered`** e **valor dos produtos após descontos, sem frete**; não equivalem a faturamento contábil nem a recebimentos.
+O modelo operacional tem nove tabelas: \`customers\`, \`addresses\`, \`categories\`, \`products\`, \`orders\`, \`order_items\`, \`payments\`, \`shipments\` e \`inventory\`.
 
-| Pergunta | Resultado observado |
-| --- | --- |
-| Mês de maior valor vendido em 2025 | **Novembro/2025:** aproximadamente **R$ 4,48 milhões** |
-| Estado com maior valor vendido | **SP:** aproximadamente **R$ 12,67 milhões** |
-| Quantos compradores são recorrentes? | **3.164 de 4.049** compradores com pedidos entregues (**78,14%**) |
-| Participação dos clientes com 4 ou mais pedidos entregues | **64,48%** do valor vendido |
-| Segmento RFM `Em risco` | **670 clientes**, responsáveis por **27,07%** do valor vendido no período |
+A camada para BI contém dimensões de clientes, produtos, datas e estados; duas tabelas de fatos comerciais e três fatos adicionais de pagamentos, envios e estoque. No Power BI, os filtros seguem as dimensões, respeitando a granularidade de cada fato. O retrato de estoque não é uma série temporal.
 
-**Limitações:** sazonalidade, preços, composição geográfica e comportamento dos clientes foram definidos no gerador sintético. A análise RFM aplica faixas descritivas e não prevê abandono real.
+## Como reproduzir
 
-[Leia a metodologia e os resultados completos](docs/analise_exploratoria.md).
+**Pré-requisitos:** PostgreSQL, Python 3.10+ e Power BI Desktop (gratuito para criação local). Os comandos partem da raiz do repositório, no Windows.
 
-## Como reproduzir o projeto
+1. Crie um banco vazio chamado \`ecommerce\` no PostgreSQL e, conectado a ele, execute [\`Sql/01_create_tables.sql\`](Sql/01_create_tables.sql).
+2. Gere os nove arquivos CSV sintéticos com semente reproduzível:
 
-**Pré-requisitos:** PostgreSQL local, Python 3.10+ e um cliente SQL (VS Code/pgAdmin). Os comandos abaixo partem da **raiz do repositório**.
-
-1. No PostgreSQL, crie um banco chamado `ecommerce`. Conecte-se a ele e execute [`Sql/01_create_tables.sql`](Sql/01_create_tables.sql) **uma única vez**, em banco vazio.
-2. Gere os CSVs sintéticos:
-
-   ```powershell
+   \`\`\`powershell
    py Python/02_generate_data.py
-   ```
+   \`\`\`
 
-3. Instale o driver e importe os CSVs (o script solicita a senha e confirmação):
+3. Instale o driver e importe os CSVs:
 
-   ```powershell
+   \`\`\`powershell
    py -m pip install "psycopg[binary]"
    py Python/03_import_data.py
-   ```
+   \`\`\`
 
-4. Rode [`Sql/02_data_quality_checks.sql`](Sql/02_data_quality_checks.sql) e explore as consultas descritas no [índice de SQL](Sql/README.md).
+   O importador pede a senha do PostgreSQL e a confirmação da carga. Ele exige as tabelas vazias e desfaz a transação em caso de erro.
 
-> O importador exige as **9 tabelas vazias** e não sobrescreve uma base já preenchida. Os arquivos `data/generated/` são recriados localmente e ignorados pelo Git.
+4. Execute as validações em [\`Sql/02_data_quality_checks.sql\`](Sql/02_data_quality_checks.sql).
+5. Crie as views analíticas, nesta ordem:
+   - [\`Sql/12_create_bi_views.sql\`](Sql/12_create_bi_views.sql)
+   - [\`Sql/13_extend_bi_customer_operations.sql\`](Sql/13_extend_bi_customer_operations.sql)
+6. Abra [\`Bi/Ecommerce_Analytics.pbix\`](Bi/Ecommerce_Analytics.pbix) no Power BI Desktop. O arquivo pode exigir atualização da conexão \`localhost:5432\` com o banco \`ecommerce\` e suas **credenciais locais**. O Power BI Desktop não é o PostgreSQL; o banco precisa estar disponível quando uma atualização for solicitada.
 
-Instruções e parâmetros adicionais: [`Python/README.md`](Python/README.md).
+Os CSVs são gerados em \`data/generated/\` e ignorados pelo Git para evitar versionar arquivos recriáveis. **Nenhuma senha é necessária no repositório.**
 
-## Organização do repositório
+## Estrutura do repositório
 
-```text
+\`\`\`text
 .
+├── Bi/
+│   ├── Ecommerce_Analytics.pbix
+│   ├── screenshots/                   # Capturas das três páginas
+│   ├── README.md
+│   └── GUIA_PAGINAS_2_3.md
 ├── Diagram/
 │   └── diagrams_01_operational_model.png
 ├── Python/
-│   ├── 02_generate_data.py       # Geração reproduzível de CSVs
-│   ├── 03_import_data.py         # Carga transacional no PostgreSQL
+│   ├── 02_generate_data.py
+│   ├── 03_import_data.py
 │   └── README.md
 ├── Sql/
-│   ├── 01_create_tables.sql      # Modelo relacional
+│   ├── 01_create_tables.sql
 │   ├── 02_data_quality_checks.sql
-│   ├── 03_eda_sales.sql
-│   ├── 04_eda_geography_customers.sql
-│   ├── 05_eda_customer_frequency.sql
-│   ├── 06_eda_customer_value.sql
-│   ├── 07_eda_rfm_basics.sql
+│   ├── 03_eda_sales.sql ... 07_eda_rfm_basics.sql
 │   ├── 11_customer_rfm_segments.sql
-│   ├── estudos_de_caso/          # Investigações opcionais
-│   │   ├── 08_eda_ticket_vs_quantity.sql
-│   │   ├── 09_eda_customer_categories.sql
-│   │   └── 10_eda_customer_basket.sql
+│   ├── 12_create_bi_views.sql
+│   ├── 13_extend_bi_customer_operations.sql
+│   ├── estudos_de_caso/
 │   └── README.md
 ├── docs/
 │   ├── analise_exploratoria.md
 │   └── estudo_de_caso_clientes.md
 └── README.md
-```
+\`\`\`
 
-A investigação de dois clientes sintéticos foi mantida como **estudo de caso complementar**, separado das análises centrais: [leia o estudo](docs/estudo_de_caso_clientes.md).
+## Entregas e habilidades demonstradas
 
-## Andamento
+- **Modelagem de dados:** diagrama relacional e esquema dimensional para BI.
+- **Python:** geração determinística de dados de teste e carga transacional em PostgreSQL.
+- **SQL:** relacionamentos, CTEs, agregações, auditoria, análises comerciais, RFM e views.
+- **Power BI / DAX:** relacionamentos, medidas, KPIs, gráficos e apresentação de resultados em três páginas.
+- **Engenharia e documentação:** boas práticas de Git, histórico de versionamento, scripts reproduzíveis e documentação técnica.
 
-- [x] Modelagem relacional e implementação do banco
-- [x] Geração determinística do dataset sintético
-- [x] Importação e auditoria inicial de qualidade
-- [x] Análise exploratória e segmentação RFM
-- [ ] Modelagem dimensional (fatos e dimensões)
-- [ ] Dashboard interativo no Power BI
-- [ ] Publicação das evidências visuais e documentação final
+**Limitações:** o projeto utiliza um cenário simulado e dados sintéticos. As regras de sazonalidade, geografia, preços e recorrência foram definidas no gerador; o RFM é descritivo e a posição de estoque é um retrato. As análises não permitem inferir tendências de consumo reais, rentabilidade ou causalidade.
 
-O versionamento guarda os **scripts e a documentação**, não uma cópia do banco local ou os CSVs gerados. Uma execução nova do gerador com a mesma semente produz o mesmo dataset.
+[Guia de SQL](Sql/README.md) · [Pipeline Python](Python/README.md) · [Guia Power BI](Bi/README.md)
