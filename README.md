@@ -8,7 +8,7 @@ Projeto de portfólio que simula o ciclo completo de análise de dados de um e-c
 
 ## Dashboard Power BI — 3 páginas
 
-> **Capturas:** os três arquivos de imagem indicados abaixo serão publicados em `Bi/screenshots/` no último commit. O relatório interativo `.pbix` já está no repositório.
+> **Capturas:** as três páginas estão disponíveis em `Bi/screenshots/`. O relatório interativo `.pbix` também está no repositório.
 
 O relatório interativo está disponível para abrir no Power BI Desktop: **[Ecommerce_Analytics.pbix](Bi/Ecommerce_Analytics.pbix)**.
 
@@ -110,7 +110,6 @@ Os CSVs são gerados em `data/generated/` e ignorados pelo Git para evitar versi
 │   ├── Ecommerce_Analytics.pbix
 │   ├── screenshots/                   # Capturas das três páginas
 │   ├── README.md
-│   └── GUIA_PAGINAS_2_3.md
 ├── Diagram/
 │   └── diagrams_01_operational_model.png
 ├── Python/
