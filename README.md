@@ -8,6 +8,8 @@ Projeto de portfólio que simula o ciclo completo de análise de dados de um e-c
 
 ## Dashboard Power BI — 3 páginas
 
+> **Capturas:** os três arquivos de imagem indicados abaixo serão publicados em `Bi/screenshots/` no último commit. O relatório interativo `.pbix` já está no repositório.
+
 O relatório interativo está disponível para abrir no Power BI Desktop: **[Ecommerce_Analytics.pbix](Bi/Ecommerce_Analytics.pbix)**.
 
 ### 1. Resumo Executivo
@@ -50,7 +52,7 @@ Status dos pedidos, taxas de cancelamento e de recusa de tentativas de pagamento
 
 **Período sintético dos pedidos:** janeiro de 2025 a outubro de 2026.
 
-**Definição de valor vendido:** soma do valor dos produtos nos pedidos com status \`delivered\`, usando preços históricos após descontos, **sem frete**. Não equivale ao faturamento contábil nem aos recebimentos de caixa. A taxa de recusa de pagamentos é calculada por **tentativas**, não por pedidos.
+**Definição de valor vendido:** soma do valor dos produtos nos pedidos com status `delivered`, usando preços históricos após descontos, **sem frete**. Não equivale ao faturamento contábil nem aos recebimentos de caixa. A taxa de recusa de pagamentos é calculada por **tentativas**, não por pedidos.
 
 ## Descobertas da análise exploratória
 
@@ -64,11 +66,11 @@ Status dos pedidos, taxas de cancelamento e de recusa de tentativas de pagamento
 
 ## Arquitetura da solução
 
-**Pipeline:** modelagem SQL → geração sintética em Python → arquivos CSV locais → PostgreSQL → checagens de integridade → views analíticas no schema \`bi\` → Power BI Desktop.
+**Pipeline:** modelagem SQL → geração sintética em Python → arquivos CSV locais → PostgreSQL → checagens de integridade → views analíticas no schema `bi` → Power BI Desktop.
 
 ![Modelo operacional relacional](Diagram/diagrams_01_operational_model.png)
 
-O modelo operacional tem nove tabelas: \`customers\`, \`addresses\`, \`categories\`, \`products\`, \`orders\`, \`order_items\`, \`payments\`, \`shipments\` e \`inventory\`.
+O modelo operacional tem nove tabelas: `customers`, `addresses`, `categories`, `products`, `orders`, `order_items`, `payments`, `shipments` e `inventory`.
 
 A camada para BI contém dimensões de clientes, produtos, datas e estados; duas tabelas de fatos comerciais e três fatos adicionais de pagamentos, envios e estoque. No Power BI, os filtros seguem as dimensões, respeitando a granularidade de cada fato. O retrato de estoque não é uma série temporal.
 
@@ -76,33 +78,33 @@ A camada para BI contém dimensões de clientes, produtos, datas e estados; duas
 
 **Pré-requisitos:** PostgreSQL, Python 3.10+ e Power BI Desktop (gratuito para criação local). Os comandos partem da raiz do repositório, no Windows.
 
-1. Crie um banco vazio chamado \`ecommerce\` no PostgreSQL e, conectado a ele, execute [\`Sql/01_create_tables.sql\`](Sql/01_create_tables.sql).
+1. Crie um banco vazio chamado `ecommerce` no PostgreSQL e, conectado a ele, execute [`Sql/01_create_tables.sql`](Sql/01_create_tables.sql).
 2. Gere os nove arquivos CSV sintéticos com semente reproduzível:
 
-   \`\`\`powershell
+   ```powershell
    py Python/02_generate_data.py
-   \`\`\`
+   ```
 
 3. Instale o driver e importe os CSVs:
 
-   \`\`\`powershell
+   ```powershell
    py -m pip install "psycopg[binary]"
    py Python/03_import_data.py
-   \`\`\`
+   ```
 
    O importador pede a senha do PostgreSQL e a confirmação da carga. Ele exige as tabelas vazias e desfaz a transação em caso de erro.
 
-4. Execute as validações em [\`Sql/02_data_quality_checks.sql\`](Sql/02_data_quality_checks.sql).
+4. Execute as validações em [`Sql/02_data_quality_checks.sql`](Sql/02_data_quality_checks.sql).
 5. Crie as views analíticas, nesta ordem:
-   - [\`Sql/12_create_bi_views.sql\`](Sql/12_create_bi_views.sql)
-   - [\`Sql/13_extend_bi_customer_operations.sql\`](Sql/13_extend_bi_customer_operations.sql)
-6. Abra [\`Bi/Ecommerce_Analytics.pbix\`](Bi/Ecommerce_Analytics.pbix) no Power BI Desktop. O arquivo pode exigir atualização da conexão \`localhost:5432\` com o banco \`ecommerce\` e suas **credenciais locais**. O Power BI Desktop não é o PostgreSQL; o banco precisa estar disponível quando uma atualização for solicitada.
+   - [`Sql/12_create_bi_views.sql`](Sql/12_create_bi_views.sql)
+   - [`Sql/13_extend_bi_customer_operations.sql`](Sql/13_extend_bi_customer_operations.sql)
+6. Abra [`Bi/Ecommerce_Analytics.pbix`](Bi/Ecommerce_Analytics.pbix) no Power BI Desktop. O arquivo pode exigir atualização da conexão `localhost:5432` com o banco `ecommerce` e suas **credenciais locais**. O Power BI Desktop não é o PostgreSQL; o banco precisa estar disponível quando uma atualização for solicitada.
 
-Os CSVs são gerados em \`data/generated/\` e ignorados pelo Git para evitar versionar arquivos recriáveis. **Nenhuma senha é necessária no repositório.**
+Os CSVs são gerados em `data/generated/` e ignorados pelo Git para evitar versionar arquivos recriáveis. **Nenhuma senha é necessária no repositório.**
 
 ## Estrutura do repositório
 
-\`\`\`text
+```text
 .
 ├── Bi/
 │   ├── Ecommerce_Analytics.pbix
@@ -128,7 +130,7 @@ Os CSVs são gerados em \`data/generated/\` e ignorados pelo Git para evitar ver
 │   ├── analise_exploratoria.md
 │   └── estudo_de_caso_clientes.md
 └── README.md
-\`\`\`
+```
 
 ## Entregas e habilidades demonstradas
 
