@@ -1,5 +1,7 @@
 # Análise de E-Commerce | Projeto End-to-End de Dados
 
+🇧🇷 **Português** | 🇺🇸 [English](README_EN.md)
+
 **PostgreSQL · Python · SQL · Power BI · Git/GitHub**
 
 Projeto de portfólio que simula o ciclo completo de análise de dados de um e-commerce: **modelagem relacional, geração de dados, carga, qualidade, análise exploratória, segmentação RFM, modelagem dimensional e dashboards em Power BI Desktop**.
@@ -128,7 +130,8 @@ Os CSVs são gerados em `data/generated/` e ignorados pelo Git para evitar versi
 ├── docs/
 │   ├── analise_exploratoria.md
 │   └── estudo_de_caso_clientes.md
-└── README.md
+├── README.md
+└── README_EN.md
 ```
 
 ## Entregas e habilidades demonstradas
